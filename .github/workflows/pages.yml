@@ -1,0 +1,55 @@
+name: Installer page
+
+# Publishes the browser installer (docs/index.html) with the latest release's firmwares. Runs on
+# main (after a release, or when the page changes), as the github-pages environment only allows
+# deployments from main.
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  push:
+    branches: [main]
+    paths: [docs/**, .github/scripts/make_manifest.py, .github/workflows/pages.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  pages:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: The latest release's firmwares
+        id: release
+        run: |
+          mkdir -p site
+          tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern '*.factory.bin' --dir site
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          ls -l site
+
+      - name: Installer page
+        run: |
+          cp docs/index.html site/
+          python .github/scripts/make_manifest.py site ${{ steps.release.outputs.version }}
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - id: pages
+        uses: actions/deploy-pages@v4

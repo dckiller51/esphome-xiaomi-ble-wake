@@ -1,7 +1,7 @@
 name: Release
 
-# A tag v… builds the ready-made firmwares (ESP32, ESP32-C3, ESP32-S3), attaches them to the
-# GitHub release and publishes the browser installer on GitHub Pages.
+# A tag v… builds the ready-made firmwares (ESP32, ESP32-C3, ESP32-S3) and attaches them to the
+# GitHub release; pages.yml then publishes them with the browser installer.
 on:
   push:
     tags: ["v*"]
@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: release
@@ -74,39 +72,3 @@ jobs:
         with:
           files: out/*.bin
           generate_release_notes: true
-
-  pages:
-    name: Installer page
-    needs: build
-    runs-on: ubuntu-latest
-    # The github-pages environment must allow tags: Settings › Environments › github-pages ›
-    # Deployment branches and tags › add the tag rule "v*".
-    environment:
-      name: github-pages
-      url: ${{ steps.pages.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/download-artifact@v6
-        with:
-          pattern: firmware-*
-          merge-multiple: true
-          path: site
-
-      - name: Version
-        id: version
-        run: |
-          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then v="${GITHUB_REF_NAME#v}"; else v="dev-${GITHUB_SHA::7}"; fi
-          echo "version=$v" >> "$GITHUB_OUTPUT"
-
-      - name: Installer page
-        run: |
-          cp docs/index.html site/
-          python .github/scripts/make_manifest.py site ${{ steps.version.outputs.version }}
-
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: site
-
-      - id: pages
-        uses: actions/deploy-pages@v4
