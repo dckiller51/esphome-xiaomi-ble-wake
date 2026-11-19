@@ -75,17 +75,19 @@ At boot the log shows `Xiaomi BLE wake:` with both addresses; on a press, `Wakin
 ## Use it
 
 - **Home Assistant**: the button (*Wake the TV* with the ready-made firmware), in a script, an automation or a dashboard.
-- **Astrion**: a hotkey, a tile or an Activity pressing that button (`button.press`), then turning the TV on as usual.
+- **Astrion** (1.6.0): on its web page › *Android TV*, next to the TV › **Bluetooth wake** › the ESP32's address. Power then asks the ESP32 first when the TV is off, and waits for the TV to answer before the other keys; no Home Assistant needed. Astrion presses the button named **Wake the TV** (ESPHome's web server: `POST /button/Wake%20the%20TV/press`): with your own YAML, give the button that name and add `web_server:`.
 
 One ESP32 wakes one TV (it takes that TV's remote's address).
 
 ## Find the two addresses
 
 **The TV's Bluetooth address** (`tv_mac`)
+
 - On the TV: *Settings › Device preferences › About › Status › Bluetooth address*.
 - Or with ADB: `adb shell settings get secure bluetooth_address`
 
 **The remote's address** (`remote_mac`)
+
 - With ADB, on a Xiaomi: `adb shell getprop persist.bluetooth.wakeuprcaddr` (e.g. `00:E0:4C:FB:BC:21;`: keep the address, without the `;`).
 - Without ADB: *Settings › Remotes & accessories*, open the remote: its address is often shown.
 - Or the [sniffer](#the-sniffer).
