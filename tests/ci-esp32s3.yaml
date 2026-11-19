@@ -1,0 +1,35 @@
+# CI only: builds the component on an esp32s3 (the local copy, not GitHub's).
+esphome:
+  name: ci-esp32s3
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+external_components:
+  - source:
+      type: local
+      path: ../components
+
+esp32_ble:
+
+xiaomi_ble_wake:
+  id: tv_wake
+  remote_mac: "00:E0:4C:FB:BC:21"
+  tv_mac: "60:1D:9D:19:48:28"
+  connectable: false
+
+logger:
+api:
+ota:
+  - platform: esphome
+wifi:
+  ssid: "ci"
+  password: "ci-password"
+
+button:
+  - platform: template
+    name: "Xiaomi TV wake"
+    on_press:
+      - lambda: id(tv_wake).wake();

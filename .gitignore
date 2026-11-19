@@ -1,0 +1,17 @@
+# ESPHome
+secrets.yaml
+*.secret.yaml
+.esphome/
+
+# PlatformIO
+.pio/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# System
+.DS_Store
+Thumbs.db

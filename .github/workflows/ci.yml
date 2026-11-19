@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  esphome:
+    name: ESPHome (${{ matrix.chip }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chip: [esp32, esp32c3, esp32s3]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install ESPHome
+        run: pip install esphome
+
+      - name: Check the config
+        run: esphome config tests/ci-${{ matrix.chip }}.yaml
+
+      - name: Build
+        run: esphome compile tests/ci-${{ matrix.chip }}.yaml
+
+  sniffer:
+    name: Sniffer (PlatformIO)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Build
+        run: pio run -d tools/xiaomi-rc-sniff
