@@ -1,0 +1,78 @@
+# Ready-made firmware (esp32): flashed from the browser, the addresses set afterwards on the
+# ESP32's web page or in Home Assistant. Built and published by .github/workflows/release.yml.
+substitutions:
+  name: xiaomi-ble-wake
+  friendly_name: Xiaomi BLE wake
+  version: dev
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  project:
+    name: dckiller51.esphome-xiaomi-ble-wake
+    version: ${version}
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+dashboard_import:
+  package_import_url: github://dckiller51/esphome-xiaomi-ble-wake/firmware/xiaomi-ble-wake-esp32.yaml@main
+  import_full_config: true
+
+external_components:
+  - source: github://dckiller51/esphome-xiaomi-ble-wake@main
+    components: [xiaomi_ble_wake]
+
+esp32_ble:
+
+xiaomi_ble_wake:
+  id: tv_wake
+
+logger:
+api:
+ota:
+  - platform: esphome
+  - platform: web_server
+
+web_server:
+  version: 3
+
+wifi:
+  ap:
+    ssid: "Xiaomi BLE wake"
+
+captive_portal:
+improv_serial:
+
+text:
+  - platform: template
+    name: "Remote address"
+    icon: mdi:remote
+    mode: text
+    entity_category: config
+    update_interval: 5s
+    lambda: return id(tv_wake).remote_mac_str();
+    set_action:
+      - lambda: id(tv_wake).set_remote_mac_text(x);
+  - platform: template
+    name: "TV address"
+    icon: mdi:television
+    mode: text
+    entity_category: config
+    update_interval: 5s
+    lambda: return id(tv_wake).tv_mac_str();
+    set_action:
+      - lambda: id(tv_wake).set_tv_mac_text(x);
+
+button:
+  - platform: template
+    name: "Wake the TV"
+    icon: mdi:power
+    on_press:
+      - lambda: id(tv_wake).wake();
+  - platform: restart
+    name: "Restart"
+    entity_category: config

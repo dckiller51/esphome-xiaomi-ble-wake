@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Xiaomi BLE wake installer</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10.1.0/dist/web/install-button.js?module"></script>
+  <style>
+    :root { --bg: #ffffff; --text: #1d2327; --muted: #5b6770; --accent: #1f6feb; --card: #f4f6f8; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) { --bg: #0e1418; --text: #e6edf3; --muted: #9aa7b1; --accent: #58a6ff; --card: #172028; }
+    }
+    :root[data-theme="dark"] { --bg: #0e1418; --text: #e6edf3; --muted: #9aa7b1; --accent: #58a6ff; --card: #172028; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 16px 48px; }
+    h1 { font-size: 1.7rem; margin: 0 0 4px; }
+    .lead { color: var(--muted); margin: 0 0 24px; }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; margin: 16px 0; }
+    ol { padding-left: 1.2em; } li { margin: 6px 0; }
+    code { background: rgba(127,127,127,.15); padding: 1px 5px; border-radius: 4px; }
+    a { color: var(--accent); }
+    esp-web-install-button { --esp-tools-button-color: var(--accent); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Xiaomi BLE wake</h1>
+  <p class="lead">Wakes a Xiaomi TV or box from deep standby with an ESP32, the way its Bluetooth remote does.</p>
+
+  <div class="card">
+    <p><strong>1. Install</strong>: plug the ESP32 (ESP32, ESP32-C3 or ESP32-S3) into this computer with a data USB cable, then:</p>
+    <esp-web-install-button manifest="manifest.json">
+      <span slot="unsupported">Your browser can't flash: use Chrome or Edge on a computer.</span>
+      <span slot="not-allowed">Open this page over HTTPS.</span>
+    </esp-web-install-button>
+    <p>Right after, the installer asks for your <strong>Wi-Fi</strong>. If it doesn't, connect to the <code>Xiaomi BLE wake</code> hotspot from a phone and pick your network.</p>
+  </div>
+
+  <div class="card">
+    <p><strong>2. Set the two addresses</strong>, on the ESP32's own page (<code>http://xiaomi-ble-wake-xxxxxx.local</code>, or its IP) or in Home Assistant once it's added:</p>
+    <ol>
+      <li><strong>TV address</strong>: the TV's Bluetooth address (<em>Settings › Device preferences › About › Status</em>).</li>
+      <li><strong>Remote address</strong>: the TV's remote (<code>adb shell getprop persist.bluetooth.wakeuprcaddr</code>). The ESP32 restarts to take it.</li>
+    </ol>
+    <p>How to find them: <a href="https://github.com/dckiller51/esphome-xiaomi-ble-wake#find-the-two-addresses">the guide</a>.</p>
+  </div>
+
+  <div class="card">
+    <p><strong>3. Wake the TV</strong>: turn it off with its remote, wait 5 minutes, press <strong>Wake the TV</strong> on the ESP32's page or in Home Assistant.</p>
+  </div>
+
+  <p class="lead">Source, guide and sniffer: <a href="https://github.com/dckiller51/esphome-xiaomi-ble-wake">github.com/dckiller51/esphome-xiaomi-ble-wake</a></p>
+</main>
+</body>
+</html>

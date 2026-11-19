@@ -29,6 +29,24 @@ jobs:
       - name: Build
         run: esphome compile tests/ci-${{ matrix.chip }}.yaml
 
+  firmware:
+    name: Ready-made firmwares (config)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install ESPHome
+        run: pip install esphome
+
+      - name: Check the configs
+        run: |
+          python .github/scripts/use_local_component.py firmware/*.yaml
+          for f in firmware/*.yaml; do esphome -s version ci config "$f"; done
+
   sniffer:
     name: Sniffer (PlatformIO)
     runs-on: ubuntu-latest

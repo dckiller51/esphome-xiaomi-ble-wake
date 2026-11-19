@@ -1,0 +1,100 @@
+name: Release
+
+# A tag v… builds the ready-made firmwares (ESP32, ESP32-C3, ESP32-S3), attaches them to the
+# GitHub release and publishes the browser installer on GitHub Pages.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Firmware (${{ matrix.chip }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        chip: [esp32, esp32c3, esp32s3]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install ESPHome
+        run: pip install esphome
+
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then v="${GITHUB_REF_NAME#v}"; else v="dev-${GITHUB_SHA::7}"; fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Use this repository's component
+        run: python .github/scripts/use_local_component.py firmware/xiaomi-ble-wake-${{ matrix.chip }}.yaml
+
+      - name: Build
+        run: esphome -s version ${{ steps.version.outputs.version }} compile firmware/xiaomi-ble-wake-${{ matrix.chip }}.yaml
+
+      - name: Collect
+        run: |
+          mkdir -p out
+          dir=$(dirname "$(find firmware/.esphome/build -name firmware.factory.bin | head -1)")
+          cp "$dir/firmware.factory.bin" "out/xiaomi-ble-wake-${{ matrix.chip }}.factory.bin"
+          cp "$dir/firmware.ota.bin" "out/xiaomi-ble-wake-${{ matrix.chip }}.ota.bin"
+          ls -l out
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: firmware-${{ matrix.chip }}
+          path: out/*
+
+  publish:
+    name: Release and installer page
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v6
+        with:
+          pattern: firmware-*
+          merge-multiple: true
+          path: site
+
+      - name: Version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then v="${GITHUB_REF_NAME#v}"; else v="dev-${GITHUB_SHA::7}"; fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Installer page
+        run: |
+          cp docs/index.html site/
+          python .github/scripts/make_manifest.py site ${{ steps.version.outputs.version }}
+
+      - name: GitHub release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: site/*.bin
+          generate_release_notes: true
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - id: pages
+        uses: actions/deploy-pages@v4

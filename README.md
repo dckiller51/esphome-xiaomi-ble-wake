@@ -1,6 +1,7 @@
 # esphome-xiaomi-ble-wake
 
 [![CI](https://github.com/dckiller51/esphome-xiaomi-ble-wake/actions/workflows/ci.yml/badge.svg)](https://github.com/dckiller51/esphome-xiaomi-ble-wake/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/dckiller51/esphome-xiaomi-ble-wake?style=flat-square)](https://github.com/dckiller51/esphome-xiaomi-ble-wake/releases/latest)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Buy_me_a_coffee-F16061?style=flat-square&logo=ko-fi&logoColor=white)](https://ko-fi.com/dckiller)
 
 Wakes a **Xiaomi TV or box from deep standby** with an ESP32, the way its own Bluetooth remote does. An [ESPHome](https://esphome.io) external component: a button in Home Assistant (or anything that can press one) turns the TV on, even when its Wi-Fi is off in standby and the network can't reach it.
@@ -20,11 +21,22 @@ Captured with this repository's [sniffer](#the-sniffer); the TV's own bug report
 ## Requirements
 
 - An **ESP32** with Bluetooth LE: ESP32, ESP32-C3, ESP32-S3… (not an ESP8266).
-- ESPHome 2025 or later, `esp-idf` framework recommended.
 - Within Bluetooth range of the TV (a few metres; place it where you'd hold the remote).
 - Your TV's **Bluetooth address** and its **remote's address** ([how to find them](#find-the-two-addresses)).
 
-## Install
+## Install the ready-made firmware
+
+No ESPHome needed: **[open the installer](https://dckiller51.github.io/esphome-xiaomi-ble-wake/)** in Chrome or Edge on a computer, plug the ESP32 in with a data USB cable, click *Connect*.
+
+1. **Wi-Fi**: the installer asks for it right after flashing. Otherwise connect to the `Xiaomi BLE wake` hotspot from a phone and pick your network.
+2. **The two addresses**: on the ESP32's page (`http://xiaomi-ble-wake-xxxxxx.local`, or its IP) or in Home Assistant (it finds the ESP32 by itself: *Settings › Devices & services › ESPHome*), fill **TV address** and **Remote address**. The ESP32 restarts to take the remote's; both stay on it.
+3. **Wake the TV**: the **Wake the TV** button, on the page or in Home Assistant.
+
+The firmwares are also on each [release](https://github.com/dckiller51/esphome-xiaomi-ble-wake/releases) (`…factory.bin` for a first flash, `…ota.bin` for an update from the ESP32's page). To change one in ESPHome, *Adopt* it in the ESPHome dashboard: it imports [its YAML](firmware).
+
+## Or add the component to your own YAML
+
+ESPHome 2025 or later, `esp-idf` framework recommended.
 
 ```yaml
 external_components:
@@ -49,10 +61,12 @@ Full files: [examples/standalone.yaml](examples/standalone.yaml) (an ESP32 of it
 
 | Option | | |
 | :--- | :--- | :--- |
-| `remote_mac` | **required** | The remote's Bluetooth address. The ESP32 takes it |
-| `tv_mac` | **required** | The TV's Bluetooth address |
+| `remote_mac` | | The remote's Bluetooth address. The ESP32 takes it |
+| `tv_mac` | | The TV's Bluetooth address |
 | `duration` | `3s` | How long to advertise (the remote does about 3 s) |
 | `connectable` | `true` | `false`: the TV can't try to connect to the ESP32 once awake (see below) |
+
+Both addresses can also be left out of the YAML and set after flashing, like the ready-made firmware does: two template `text` entities calling `id(tv_wake).set_remote_mac_text(x)` and `id(tv_wake).set_tv_mac_text(x)`, shown with `remote_mac_str()` and `tv_mac_str()` (see [firmware/](firmware)). An address set that way stays on the ESP32 and wins over the YAML's; an empty one goes back to the YAML's.
 
 At boot the log shows `Xiaomi BLE wake:` with both addresses; on a press, `Waking the TV: ESP_OK`.
 
@@ -60,7 +74,7 @@ At boot the log shows `Xiaomi BLE wake:` with both addresses; on a press, `Wakin
 
 ## Use it
 
-- **Home Assistant**: the button `button.xiaomi_tv_wake`, in a script, an automation or a dashboard.
+- **Home Assistant**: the button (*Wake the TV* with the ready-made firmware), in a script, an automation or a dashboard.
 - **Astrion**: a hotkey, a tile or an Activity pressing that button (`button.press`), then turning the TV on as usual.
 
 One ESP32 wakes one TV (it takes that TV's remote's address).
@@ -78,7 +92,7 @@ One ESP32 wakes one TV (it takes that TV's remote's address).
 
 ADB over Wi-Fi: on the TV, *About › Build* pressed 7 times, then *Developer options › USB debugging*; on a computer, `adb connect <tv-ip>:5555` and accept the prompt on the TV.
 
-A new remote paired to the TV replaces the old one's address: put the new one in `remote_mac`.
+A new remote paired to the TV replaces the old one's address: set the new one (**Remote address**, or `remote_mac`).
 
 ## Will it work with mine?
 
